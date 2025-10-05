@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/g-laliotis/task-tracker/internal/model"
 	"github.com/g-laliotis/task-tracker/internal/service"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,19 +13,19 @@ type TaskHandler struct {
 	service *service.TaskService
 }
 
-func NewTaskHandler(service *service.TaskService) *TaskHandler {
-	return &TaskHandler{service: service}
+func NewTaskHandler(s *service.TaskService) *TaskHandler {
+	return &TaskHandler{service: s}
 }
 
 func (h *TaskHandler) RegisterRoutes(r *gin.Engine) {
-	r.GET("/tasks", h.getAllTasks)
-	r.POST("/tasks", h.createTask)
-	r.PUT("/tasks/:id", h.updateTask)
-	r.DELETE("/tasks/:id", h.deleteTask)
+	r.GET("/tasks", h.GetTasks)
+	r.POST("/tasks", h.CreateTask)
+	r.PUT("/tasks/:id", h.UpdateTask)
+	r.DELETE("/tasks/:id", h.DeleteTask)
 }
 
-func (h *TaskHandler) getAllTasks(c *gin.Context) {
-	tasks, err := h.service.GetAllTasks()
+func (h *TaskHandler) GetTasks(c *gin.Context) {
+	tasks, err := h.service.GetAll()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -33,45 +33,39 @@ func (h *TaskHandler) getAllTasks(c *gin.Context) {
 	c.JSON(http.StatusOK, tasks)
 }
 
-func (h *TaskHandler) createTask(c *gin.Context) {
-	var input struct {
-		Title string `json:"title"`
-	}
-	if err := c.ShouldBindJSON(&input); err != nil {
+func (h *TaskHandler) CreateTask(c *gin.Context) {
+	var task model.Task
+	if err := c.ShouldBindJSON(&task); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	task, err := h.service.CreateTask(input.Title)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusCreated, task)
-}
-
-func (h *TaskHandler) updateTask(c *gin.Context) {
-	idParam := c.Param("id")
-	id, _ := strconv.Atoi(idParam)
-	var input struct {
-		Completed bool `json:"completed"`
-	}
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	if err := h.service.UpdateTask(uint(id), input.Completed); err != nil {
+	if err := h.service.Create(&task); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.Status(http.StatusNoContent)
+	c.JSON(http.StatusOK, task)
 }
 
-func (h *TaskHandler) deleteTask(c *gin.Context) {
-	idParam := c.Param("id")
-	id, _ := strconv.Atoi(idParam)
-	if err := h.service.DeleteTask(uint(id)); err != nil {
+func (h *TaskHandler) UpdateTask(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	var task model.Task
+	if err := c.ShouldBindJSON(&task); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	task.ID = uint(id)
+	if err := h.service.Update(&task); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.Status(http.StatusNoContent)
+	c.JSON(http.StatusOK, task)
+}
+
+func (h *TaskHandler) DeleteTask(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	if err := h.service.Delete(uint(id)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.Status(http.StatusOK)
 }

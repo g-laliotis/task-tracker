@@ -12,6 +12,7 @@ This API allows you to create, read, update, and delete tasks, demonstrating a p
 - Uses SQLite for local persistence
 - Easy to extend with PostgreSQL, authentication, or deployment
 - Lightweight and fast with Gin
+- ✅ Includes a demo script to showcase the API automatically
 
 ---
 
@@ -26,6 +27,7 @@ task-tracker/
 │ ├── repository/ # Database layer
 │ └── model/ # Structs and types
 ├── go.mod
+├── demo.go # Demo script for automated API demonstration
 └── README.md
 ```
 ---
@@ -65,6 +67,20 @@ curl -X PUT http://localhost:8080/tasks/1 \
 -d '{"completed": true}'
 Delete a Task:
 curl -X DELETE http://localhost:8080/tasks/1
+
+🧪 Demo Script
+
+Run the demo:
+Make sure the server is running:
+go run ./cmd/server
+In a separate terminal, run:
+go run demo.go
+The demo will:
+Create three tasks
+List all tasks
+Mark task 1 as completed
+Delete task 2
+Show the final list of tasks
 
 🧪 Future Improvements
 Add user authentication
