@@ -10,8 +10,8 @@ import (
 
 const (
 	baseURL  = "https://task-tracker-5cg1.onrender.com"
-	email    = "alice@example.com" // 👈 change this if needed
-	password = "mypassword"        // 👈 change this if needed
+	email    = "test@example.com" // 👈 change this if needed
+	password = "password123"      // 👈 change this if needed
 )
 
 type Task struct {
