@@ -26,6 +26,7 @@ task-tracker/
 ├── demo_render.go     # Live demo script for Render
 └── README.md
 ```
+```bash
 ⚙️ Environment Variables
 Local .env file:
 PORT=8080
@@ -37,7 +38,8 @@ PORT=10000
 GIN_MODE=release
 JWT_SECRET=supersecretkey
 DATABASE_URL=postgres://username:password@host:5432/dbname
-
+```
+```bash
 🌐 API Endpoints
 Method	URL	Body	Description
 POST	/signup	{ "email": "...", "password": "..." }	Register new user
@@ -48,7 +50,8 @@ PUT	/tasks/:id	{ "completed": true/false }	Update a task
 DELETE	/tasks/:id	—	Delete a task
 All /tasks endpoints require:
 Authorization: Bearer <token>
-
+```
+```bash
 💻 Example Usage (Live on Render)
 Base URL:
 https://task-tracker-5cg1.onrender.com
@@ -78,7 +81,8 @@ curl -X PUT https://task-tracker-5cg1.onrender.com/tasks/1 \
 6️⃣ Delete a task
 curl -X DELETE https://task-tracker-5cg1.onrender.com/tasks/1 \
 -H "Authorization: Bearer <token>"
-
+```
+```bash
 🧪 Demo Script
 You can run demo_render.go locally to automatically:
 Login to your live Render API
@@ -89,7 +93,8 @@ go run demo_render.go
 🧠 Example output:
 🔑 Logging in and fetching token...
 ✅ Token fetched successfully!
-
+```
+```bash
 🪄 Creating tasks...
 ✅ Created: {"id":1,"title":"Learn Go","completed":false}
 ✅ Created: {"id":2,"title":"Build API","completed":false}
@@ -102,7 +107,8 @@ go run demo_render.go
 
 🗑 Deleting task #2
 ✅ Deleted task 2
-
+```
+```bash
 🏁 Final list:
 [{"id":1,"title":"Learn Go","completed":true}]
 📦 Deployment on Render
@@ -131,7 +137,7 @@ Add user roles and permissions
 Add Swagger/OpenAPI documentation
 Add unit and integration tests
 Extend tasks with due dates, priorities, or categories
-
+```
 🧑‍💻 Author
 Giorgos Laliotis
 Task Tracker API
