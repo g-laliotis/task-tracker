@@ -19,36 +19,46 @@ import (
 
 func main() {
 	// 1️⃣ Load .env file if present
-	_ = godotenv.Load()
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("No .env file found, using defaults")
+	}
 
-	// 2️⃣ Get environment variables
+	// 2️⃣ Read environment variables
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	dbURL := os.Getenv("DATABASE_URL") // optional PostgreSQL
-	var db *gorm.DB
-	var err error
+	ginMode := os.Getenv("GIN_MODE")
+	if ginMode != "" {
+		gin.SetMode(ginMode)
+	}
 
-	// 3️⃣ Connect to database
+	dbURL := os.Getenv("DATABASE_URL")
+
+	// 3️⃣ Connect to the database
+	var db *gorm.DB
 	if dbURL != "" {
 		fmt.Println("🔗 Connecting to PostgreSQL...")
 		db, err = gorm.Open(postgres.Open(dbURL), &gorm.Config{})
+		if err != nil {
+			log.Fatal("❌ Failed to connect to PostgreSQL:", err)
+		}
 	} else {
 		fmt.Println("💾 Using local SQLite database...")
 		db, err = gorm.Open(sqlite.Open("tasks.db"), &gorm.Config{})
-	}
-	if err != nil {
-		log.Fatal("❌ Failed to connect to database:", err)
+		if err != nil {
+			log.Fatal("❌ Failed to connect to SQLite:", err)
+		}
 	}
 
-	// 4️⃣ Auto-migrate the Task model
+	// 4️⃣ Auto-migrate models
 	if err := db.AutoMigrate(&model.Task{}); err != nil {
-		log.Fatal("❌ Migration failed:", err)
+		log.Fatal("❌ Failed to migrate Task model:", err)
 	}
 
-	// 5️⃣ Initialize repository, service, and handler
+	// 5️⃣ Initialize repository, service, handler
 	repo := repository.NewTaskRepository(db)
 	svc := service.NewTaskService(repo)
 	h := handler.NewTaskHandler(svc)
@@ -57,8 +67,8 @@ func main() {
 	r := gin.Default()
 	h.RegisterRoutes(r)
 
-	// 7️⃣ Start server (Render requires dynamic port binding)
-	fmt.Println("🚀 Server running on port " + port)
+	// 7️⃣ Start server
+	fmt.Println("🚀 Server running on port", port)
 	if err := r.Run(":" + port); err != nil {
 		log.Fatal("❌ Failed to start server:", err)
 	}
