@@ -43,4 +43,35 @@ func main() {
 			log.Fatal(err)
 		}
 	} else {
-	
+		fmt.Println("💾 Using SQLite...")
+		db, err = gorm.Open(sqlite.Open("tasks.db"), &gorm.Config{})
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	if err := db.AutoMigrate(&model.User{}, &model.Task{}); err != nil {
+		log.Fatal(err)
+	}
+
+	userRepo := repository.NewUserRepository(db)
+	userSvc := service.NewUserService(userRepo)
+	authHandler := handler.NewAuthHandler(userSvc)
+
+	taskRepo := repository.NewTaskRepository(db)
+	taskSvc := service.NewTaskService(taskRepo)
+	taskHandler := handler.NewTaskHandler(taskSvc)
+
+	r := gin.Default()
+
+	// Auth routes
+	authHandler.RegisterRoutes(r)
+
+	// Task routes (JWT-protected)
+	taskHandler.RegisterRoutes(r)
+
+	fmt.Println("🚀 Server running on port", port)
+	if err := r.Run(":" + port); err != nil {
+		log.Fatal(err)
+	}
+}
