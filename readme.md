@@ -144,5 +144,3 @@ Giorgos Laliotis
 
 Task Tracker API
 🔗 https://task-tracker-5cg1.onrender.com
-
-https://sdmntpritalynorth.oaiusercontent.com/files/00000000-aeb8-6246-b7a0-91a6a0d434aa/raw?se=2025-10-06T22%3A23%3A15Z&sp=r&sv=2024-08-04&sr=b&scid=a84fe07b-e598-555e-9aa7-c177faae78a3&skoid=0a4a0f0c-99ac-4752-9d87-cfac036fa93f&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-10-06T03%3A58%3A45Z&ske=2025-10-07T03%3A58%3A45Z&sks=b&skv=2024-08-04&sig=NECWhQmnNKp1eOUdHtcVXVmJKtwCA1zhny0Xo%2Bc2Gyw%3D
