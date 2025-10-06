@@ -69,7 +69,6 @@ Delete a Task:
 curl -X DELETE http://localhost:8080/tasks/1
 
 🧪 Demo Script
-
 Run the demo:
 Make sure the server is running:
 go run ./cmd/server
