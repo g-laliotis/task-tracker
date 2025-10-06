@@ -18,78 +18,64 @@ func NewTaskHandler(s *service.TaskService) *TaskHandler {
 }
 
 func (h *TaskHandler) RegisterRoutes(r *gin.Engine) {
-	r.GET("/tasks", h.GetTasks)
-	r.POST("/tasks", h.CreateTask)
-	r.PUT("/tasks/:id", h.UpdateTask)
-	r.DELETE("/tasks/:id", h.DeleteTask)
+	auth := r.Group("/tasks")
+	auth.Use(AuthMiddleware())
+	{
+		auth.GET("", h.GetTasks)
+		auth.POST("", h.CreateTask)
+		auth.PUT("/:id", h.UpdateTask)
+		auth.DELETE("/:id", h.DeleteTask)
+	}
 }
 
-// GET /tasks
 func (h *TaskHandler) GetTasks(c *gin.Context) {
-	tasks, err := h.service.GetAll()
+	userID := c.GetUint("user_id")
+	tasks, err := h.service.GetAll(userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch tasks", "details": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, tasks)
 }
 
-// POST /tasks
 func (h *TaskHandler) CreateTask(c *gin.Context) {
-	var input model.Task
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body", "details": err.Error()})
+	userID := c.GetUint("user_id")
+	var task model.Task
+	if err := c.ShouldBindJSON(&task); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	if input.Title == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "title is required"})
+	task.UserID = userID
+	if err := h.service.Create(&task); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	if err := h.service.Create(&input); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create task", "details": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusCreated, input)
+	c.JSON(http.StatusCreated, task)
 }
 
-// PUT /tasks/:id
 func (h *TaskHandler) UpdateTask(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid task ID"})
+	userID := c.GetUint("user_id")
+	id, _ := strconv.Atoi(c.Param("id"))
+	var task model.Task
+	if err := c.ShouldBindJSON(&task); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	var input model.Task
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body", "details": err.Error()})
+	task.ID = uint(id)
+	task.UserID = userID
+	if err := h.service.Update(&task); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	input.ID = uint(id)
-	if err := h.service.Update(&input); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update task", "details": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, input)
+	c.JSON(http.StatusOK, task)
 }
 
-// DELETE /tasks/:id
 func (h *TaskHandler) DeleteTask(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid task ID"})
+	userID := c.GetUint("user_id")
+	id, _ := strconv.Atoi(c.Param("id"))
+	if err := h.service.Delete(uint(id), userID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	if err := h.service.Delete(uint(id)); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete task", "details": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "task deleted successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "task deleted"})
 }
