@@ -107,10 +107,11 @@ go run demo_render.go
 
 🗑 Deleting task #2
 ✅ Deleted task 2
-```
-```bash
+
 🏁 Final list:
 [{"id":1,"title":"Learn Go","completed":true}]
+```
+```bash
 📦 Deployment on Render
 Push your repo to GitHub.
 Create a New Web Service on Render:
@@ -140,5 +141,6 @@ Extend tasks with due dates, priorities, or categories
 ```
 🧑‍💻 Author
 Giorgos Laliotis
+
 Task Tracker API
 🔗 https://task-tracker-5cg1.onrender.com
