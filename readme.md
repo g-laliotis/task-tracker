@@ -1,6 +1,7 @@
 📝 Task Tracker API
-A multi-user task/job management REST API built with Go, Gin, and GORM, ready to deploy on Render.
 
+A multi-user task/job management REST API built with Go, Gin, and GORM, ready to deploy on Render.
+```bash
 🚀 Features
 🔐 User signup and login with JWT authentication
 🧩 Create, list, update, and delete tasks (per user)
@@ -9,7 +10,9 @@ A multi-user task/job management REST API built with Go, Gin, and GORM, ready to
 ⚡ Lightweight and fast with Gin
 🌍 Fully deployable to Render, Railway, or Fly.io
 🧪 Includes a demo script that runs automatically against your live API
+```
 
+```bash
 📂 Project Structure
 task-tracker/
 ├── cmd/
@@ -22,7 +25,7 @@ task-tracker/
 ├── go.mod
 ├── demo_render.go     # Live demo script for Render
 └── README.md
-
+```
 ⚙️ Environment Variables
 Local .env file:
 PORT=8080
