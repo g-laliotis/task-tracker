@@ -6,8 +6,14 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 )
+
+const baseURL = "http://localhost:8080"
+
+type User struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
 
 type Task struct {
 	ID        uint   `json:"id,omitempty"`
@@ -16,78 +22,111 @@ type Task struct {
 }
 
 func main() {
-	baseURL := os.Getenv("API_BASE_URL")
-	if baseURL == "" {
-		baseURL = "http://localhost:8080/tasks" // default for local
-	}
-
 	client := &http.Client{}
 
-	// 1️⃣ Create tasks
+	// 1️⃣ Sign up a user
+	user := User{Email: "test@example.com", Password: "password123"}
+	fmt.Println("📝 Signing up user...")
+	postJSON(client, "/signup", user, "")
+
+	// 2️⃣ Log in and get JWT token
+	fmt.Println("🔑 Logging in...")
+	resp, _ := postJSON(client, "/login", user, "")
+	data, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+
+	var result map[string]string
+	json.Unmarshal(data, &result)
+	token := result["token"]
+	fmt.Println("✅ Token received:", token)
+
+	// 3️⃣ Create tasks
 	tasksToCreate := []string{"Learn Go", "Build API", "Test API"}
-	fmt.Println("🪄 Creating tasks...")
 	for _, title := range tasksToCreate {
 		task := Task{Title: title}
-		body, _ := json.Marshal(task)
-
-		resp, err := http.Post(baseURL, "application/json", bytes.NewBuffer(body))
-		if err != nil {
-			fmt.Println("❌ Error creating task:", err)
-			continue
-		}
-		handleResponse(resp)
+		postJSON(client, "/tasks", task, token)
 	}
 
-	// 2️⃣ List all tasks
+	// 4️⃣ List all tasks
 	fmt.Println("\n📋 Listing all tasks:")
-	resp, err := http.Get(baseURL)
-	if err != nil {
-		fmt.Println("❌ Error getting tasks:", err)
-		return
-	}
-	handleResponse(resp)
+	getJSON(client, "/tasks", token)
 
-	// 3️⃣ Update first task
-	fmt.Println("\n🔄 Updating task 1 as completed...")
+	// 5️⃣ Update first task
 	update := Task{Completed: true}
-	body, _ := json.Marshal(update)
-	req, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("%s/1", baseURL), bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
+	putJSON(client, "/tasks/1", update, token)
 
-	resp, err = client.Do(req)
-	if err != nil {
-		fmt.Println("❌ Error updating task:", err)
-		return
-	}
-	handleResponse(resp)
+	// 6️⃣ Delete second task
+	deleteReq(client, "/tasks/2", token)
 
-	// 4️⃣ Delete second task
-	fmt.Println("\n🗑️ Deleting task 2...")
-	req, _ = http.NewRequest(http.MethodDelete, fmt.Sprintf("%s/2", baseURL), nil)
-	resp, err = client.Do(req)
-	if err != nil {
-		fmt.Println("❌ Error deleting task:", err)
-		return
-	}
-	handleResponse(resp)
-
-	// 5️⃣ Final list of tasks
+	// 7️⃣ Final list of tasks
 	fmt.Println("\n📦 Final list of tasks:")
-	resp, err = http.Get(baseURL)
-	if err != nil {
-		fmt.Println("❌ Error getting tasks:", err)
-		return
-	}
-	handleResponse(resp)
+	getJSON(client, "/tasks", token)
 }
 
-func handleResponse(resp *http.Response) {
-	defer resp.Body.Close()
-	data, _ := io.ReadAll(resp.Body)
-
-	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-		fmt.Println(string(data))
-	} else {
-		fmt.Printf("⚠️  Status %d: %s\n", resp.StatusCode, string(data))
+func postJSON(client *http.Client, path string, body interface{}, token string) (*http.Response, error) {
+	url := baseURL + path
+	data, _ := json.Marshal(body)
+	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(data))
+	req.Header.Set("Content-Type", "application/json")
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
 	}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return nil, err
+	}
+	respData, _ := io.ReadAll(resp.Body)
+	fmt.Println(string(respData))
+	resp.Body.Close()
+	return resp, err
+}
+
+func getJSON(client *http.Client, path, token string) {
+	url := baseURL + path
+	req, _ := http.NewRequest("GET", url, nil)
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	data, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	fmt.Println(string(data))
+}
+
+func putJSON(client *http.Client, path string, body interface{}, token string) {
+	url := baseURL + path
+	data, _ := json.Marshal(body)
+	req, _ := http.NewRequest("PUT", url, bytes.NewBuffer(data))
+	req.Header.Set("Content-Type", "application/json")
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	respData, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	fmt.Println(string(respData))
+}
+
+func deleteReq(client *http.Client, path, token string) {
+	url := baseURL + path
+	req, _ := http.NewRequest("DELETE", url, nil)
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	fmt.Println("Deleted task:", path)
+	resp.Body.Close()
 }
